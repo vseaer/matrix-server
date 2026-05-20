@@ -1,28 +1,26 @@
+# Use Conduit official image as base (includes Nix store dependencies)
+FROM registry.gitlab.com/famedly/conduit/matrix-conduit:latest AS conduit-base
+
+# Main image
 FROM debian:bookworm-slim
 
-# Install dependencies
 RUN apt-get update && apt-get install -y \
-    nginx \
-    wget \
-    ca-certificates \
-    supervisor \
-    sqlite3 \
-    curl \
+    nginx wget ca-certificates supervisor sqlite3 curl tini \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Conduit (Matrix homeserver)
-ARG CONDUIT_VERSION=v0.8.0
-RUN wget -q "https://gitlab.com/famedly/conduit/-/releases/${CONDUIT_VERSION}/downloads/conduit-x86_64-unknown-linux-musl" \
-    -O /usr/local/bin/conduit \
-    && chmod +x /usr/local/bin/conduit
+# Copy entire nix store from conduit image (binary + dependencies)
+COPY --from=conduit-base /nix /nix
+
+# Create a symlink for convenience
+RUN ln -sf $(find /nix/store -name "conduit" -type f -executable | head -1) /usr/local/bin/conduit
 
 # Install Element Web
 ARG ELEMENT_VERSION=v1.11.85
-RUN mkdir -p /var/www/element \
-    && wget -q "https://github.com/element-hq/element-web/releases/download/${ELEMENT_VERSION}/element-${ELEMENT_VERSION}.tar.gz" \
-    -O /tmp/element.tar.gz \
-    && tar xzf /tmp/element.tar.gz -C /var/www/element --strip-components=1 \
-    && rm /tmp/element.tar.gz
+RUN mkdir -p /var/www/element && \
+    wget "https://github.com/element-hq/element-web/releases/download/${ELEMENT_VERSION}/element-${ELEMENT_VERSION}.tar.gz" \
+    -O /tmp/element.tar.gz && \
+    tar xzf /tmp/element.tar.gz -C /var/www/element --strip-components=1 && \
+    rm /tmp/element.tar.gz
 
 # Create data directory
 RUN mkdir -p /data
