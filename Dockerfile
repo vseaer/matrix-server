@@ -5,14 +5,11 @@ FROM registry.gitlab.com/famedly/conduit/matrix-conduit:latest AS conduit-base
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
-    nginx wget ca-certificates supervisor sqlite3 curl tini \
+    nginx wget ca-certificates supervisor sqlite3 curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy entire nix store from conduit image (binary + dependencies)
+# Copy entire nix store from conduit image (binary + all dependencies)
 COPY --from=conduit-base /nix /nix
-
-# Create a symlink for convenience
-RUN ln -sf $(find /nix/store -name "conduit" -type f -executable | head -1) /usr/local/bin/conduit
 
 # Install Element Web
 ARG ELEMENT_VERSION=v1.11.85
