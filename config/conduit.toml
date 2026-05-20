@@ -1,0 +1,21 @@
+[global]
+server_name = "matrix-hf.example"
+database_backend = "sqlite"
+database_path = "/data/conduit.db"
+port = 6167
+address = "127.0.0.1"
+max_request_size = 20_000_000
+allow_registration = true
+allow_federation = false
+trusted_servers = ["matrix.org"]
+
+# Allow guests
+allow_guest_registration = false
+
+# Enable encryption
+allow_encryption = true
+
+# TURN server for voice/video calls (1-on-1)
+turn_uris = ["turn:turn.matrix.org?transport=udp", "turn:turn.matrix.org?transport=tcp"]
+turn_secret = "n0telekomForworworworworworworworworworwor"
+turn_ttl = 86400
